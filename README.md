@@ -1,49 +1,31 @@
-# CalaveriiX Bot MAX 24/7
+# CalaveriiX Bot MAX
 
-Lo dejé armado de una vez, más completo y limpio para Railway.
+Bot Discord con utilidades, moderación, economía, tickets y música con botones.
 
-## Trae
-- utilidad
-- encuestas
-- economía con banco
-- tienda
-- inventario
-- juegos
-- tickets con transcripts
-- moderación
-- warnings
-- welcome y logs
-- autorole
-- niveles
-- leaderboard
-- sorteos
-- sugerencias
-- automod básico
-- reaction roles
-- panel admin
-- healthcheck 24/7
-- base SQLite
+## Música
+Comandos slash:
+- `/play cancion:` busca/reproduce o agrega a la cola
+- `/skip`
+- `/queue`
+- `/musicpanel` publica controles Pausar / Seguir / Saltar / Detener
 
-## Variables
-- `DISCORD_TOKEN`
-- opcional: `BOT_PREFIX`
-- opcional: `PORT`
-- opcional: `DATABASE_PATH`
+La música requiere un servidor **Lavalink v4** independiente y las variables:
+- `LAVALINK_URI` (ej. dirección de tu servidor Lavalink)
+- `LAVALINK_PASSWORD`
 
-## Start
+Para búsquedas de YouTube, Lavalink debe tener instalado y configurado el plugin de YouTube compatible. Lavalink no viene incluido en este repositorio ni se ejecuta automáticamente en Railway.
+
+## Variables del bot
+- `DISCORD_TOKEN` obligatoria
+- `BOT_PREFIX` opcional (por defecto `!`)
+- `PORT` opcional (por defecto `8080`)
+- `DATABASE_PATH` opcional
+
+## Ejecutar
+`pip install -r requirements.txt`
 `python main.py`
 
-## Setup recomendado
-1. `!setwelcome #bienvenidas`
-2. `!setlogs #logs`
-3. `!setautorole @Miembro`
-4. `!setstaffrole @Staff`
-5. `!ticketsetup Tickets`
-6. `!settranscripts #transcripts`
-7. `!setsuggestions #sugerencias`
-8. `!toggleautomod`
-9. `!setautomodlogs #automod-logs`
-10. `!ticketpanel`
+Los comandos slash se sincronizan al iniciar; la propagación global de Discord puede tardar un poco.
 
-## Nota honesta
-Queda muy completo para ser base 24/7, pero cosas como Twitch, Kick, YouTube, música, dashboard web real y APIs externas siguen necesitando claves/configuración aparte.
+## Funciones
+Utilidad, encuestas, economía, tienda/inventario, juegos, tickets/transcripts, moderación, warnings, welcome/logs, autorole, niveles/leaderboard, sorteos, sugerencias, automod, reaction roles, panel admin, SQLite y healthcheck.
