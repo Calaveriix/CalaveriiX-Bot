@@ -1,3 +1,4 @@
 discord.py>=2.4.0,<3
 aiohttp>=3.9.0,<4
 aiosqlite>=0.20.0,<1
+wavelink>=3.4.0,<4
