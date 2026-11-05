@@ -1,9 +1,14 @@
 import os
 import asyncio
 import logging
+from pathlib import Path
+from dotenv import load_dotenv
 from aiohttp import web
 import discord
 from discord.ext import commands
+
+# Load Wispbyte's .env file explicitly before reading secrets.
+load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
 from core.database import init_db
 
@@ -12,7 +17,7 @@ PREFIX = os.getenv("BOT_PREFIX", "!")
 PORT = int(os.getenv("PORT", "8080"))
 
 if not TOKEN:
-    raise RuntimeError("Falta la variable DISCORD_TOKEN")
+    raise RuntimeError("Falta DISCORD_TOKEN. Comprueba que /.env contenga DISCORD_TOKEN=tu_token")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 log = logging.getLogger("calaveriix")
