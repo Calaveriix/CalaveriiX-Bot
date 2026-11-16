@@ -58,3 +58,37 @@ La dependencia `obsws-python` ya está añadida a `requirements.txt`. Al despleg
 ## Limitación conocida
 
 Esta primera versión detecta el estado de transmisión de OBS. No lee eventos de chat de Twitch/Kick/YouTube ni controla escenas de OBS. Social Stream Ninja (puerto 4456) queda para una segunda fase.
+
+## 6. Social Stream Ninja -> Discord
+
+El puente recibe los mensajes de chat por el WebSocket alojado oficial de Social Stream Ninja y los reenvía a un canal de Discord dedicado. El bot puede estar en Wispbyte; no necesita abrir el puerto local 4456.
+
+### Configuración en Social Stream Ninja
+
+1. Abre Social Stream Ninja y entra en **Global settings and tools → Mechanics - Connections & Integrations**.
+2. Activa **Enable remote API control of extension**.
+3. Activa **Send chat messages to API server** (tercer interruptor).
+4. Copia el Session ID de tu URL generada de Dock/overlay. Trátalo como secreto: no lo publiques.
+
+### Variables del hosting
+
+```env
+SSN_SESSION_ID=TU_SESSION_ID
+SSN_DISCORD_CHANNEL_ID=ID_DEL_CANAL_CHAT
+```
+
+El canal debe ser un canal de texto privado o dedicado, con permisos de ver canal y enviar mensajes para el bot. Usa un canal separado del canal de anuncios para no mezclar mensajes.
+
+### Comando de diagnóstico
+
+- `/ssnestado`: indica si el puente está conectado. Si pierde conexión, intenta reconectar automáticamente cada 10 segundos.
+
+### Seguridad y comportamiento
+
+- El puente solo escucha mensajes (canal 4); no envía comandos ni mensajes a tus plataformas.
+- Los mensajes se publican como embeds y las menciones de Discord están desactivadas para evitar pings maliciosos.
+- Se limita la longitud de los mensajes y se evita reenviar IDs duplicados recientes.
+- No compartas el Session ID en capturas, repositorios o chats públicos.
+- No necesitas habilitar el servidor local de SSN ni abrir el puerto 4456 para este modo: utiliza el WebSocket alojado oficial.
+
+Documentación oficial: https://socialstream.ninja/docs/commands.html (sección Server API / Receiving Chat Messages).
