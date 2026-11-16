@@ -1,7 +1,6 @@
 """Integración OBS -> Discord para IMPERIO CALAVERIIX LIVE.
 
-Configuración por variables de entorno:
-OBS_HOST, OBS_PORT, OBS_PASSWORD, LIVE_ANNOUNCE_CHANNEL_ID,
+Variables: OBS_HOST, OBS_PORT, OBS_PASSWORD, LIVE_ANNOUNCE_CHANNEL_ID,
 LIVE_ROLE_ID (opcional), TWITCH_URL, KICK_URL, YOUTUBE_URL.
 """
 import asyncio
@@ -14,7 +13,7 @@ from discord.ext import commands
 
 try:
     import obsws_python as obs
-except ImportError:  # El bot puede arrancar aunque OBS no esté configurado.
+except ImportError:
     obs = None
 
 log = logging.getLogger("calaveriix.live")
@@ -60,8 +59,7 @@ class ImperioCalaveriixLive(commands.Cog):
             timeout=3,
         )
         try:
-            status = client.get_stream_status()
-            return bool(status.output_active)
+            return bool(client.get_stream_status().output_active)
         finally:
             disconnect = getattr(client, "disconnect", None)
             if callable(disconnect):
@@ -70,17 +68,17 @@ class ImperioCalaveriixLive(commands.Cog):
     async def _poll_obs(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
-            if self.announce_channel_id and self.obs_password:
+            if self.announce_channel_id:
                 try:
                     is_live = await asyncio.to_thread(self._read_obs_status)
                     self._warned_obs = False
                     if self.last_live is None:
                         if is_live:
-                            await self._announce_started()
+                            await self._send_announcement(started=True)
                     elif is_live and not self.last_live:
-                        await self._announce_started()
+                        await self._send_announcement(started=True)
                     elif not is_live and self.last_live:
-                        await self._announce_ended()
+                        await self._send_announcement(started=False)
                     self.last_live = is_live
                 except asyncio.CancelledError:
                     raise
@@ -102,18 +100,18 @@ class ImperioCalaveriixLive(commands.Cog):
                 links.append(f"[{label}]({url})")
         return links
 
-    async def _send_announcement(self, *, started: bool):
+    async def _send_announcement(self, *, started: bool) -> bool:
         channel = self.bot.get_channel(self.announce_channel_id)
         if channel is None:
             try:
                 channel = await self.bot.fetch_channel(self.announce_channel_id)
             except (discord.NotFound, discord.Forbidden, discord.HTTPException):
                 log.exception("No se pudo encontrar el canal de anuncios de directos")
-                return
+                return False
 
-        if not hasattr(channel, "send"):
+        if not callable(getattr(channel, "send", None)):
             log.error("LIVE_ANNOUNCE_CHANNEL_ID no apunta a un canal de mensajes")
-            return
+            return False
 
         if started:
             embed = discord.Embed(
@@ -135,31 +133,25 @@ class ImperioCalaveriixLive(commands.Cog):
 
         content = f"<@&{self.live_role_id}>" if started and self.live_role_id else None
         try:
-            await channel.send(content=content, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
+            await channel.send(
+                content=content,
+                embed=embed,
+                allowed_mentions=discord.AllowedMentions(roles=True),
+            )
+            return True
         except discord.HTTPException:
             log.exception("No se pudo publicar el aviso de directo")
-
-    async def _announce_started(self):
-        await self._send_announcement(started=True)
-
-    async def _announce_ended(self):
-        await self._send_announcement(started=False)
+            return False
 
     @app_commands.command(name="liveestado", description="Comprueba si OBS está transmitiendo")
     async def liveestado(self, interaction: discord.Interaction):
-        if not self.obs_password:
-            await interaction.response.send_message(
-                "⚙️ OBS aún no está configurado. Faltan OBS_PASSWORD y la conexión WebSocket.",
-                ephemeral=True,
-            )
-            return
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             is_live = await asyncio.to_thread(self._read_obs_status)
         except Exception as exc:
             log.warning("Comprobación manual de OBS fallida: %s", exc)
             await interaction.followup.send(
-                "❌ No pude conectar con OBS. Revisa que OBS esté abierto y que WebSocket esté activado en el puerto configurado.",
+                "❌ No pude conectar con OBS. Revisa que OBS esté abierto, WebSocket activado y los datos configurados.",
                 ephemeral=True,
             )
             return
@@ -178,8 +170,11 @@ class ImperioCalaveriixLive(commands.Cog):
             )
             return
         await interaction.response.defer(ephemeral=True)
-        await self._announce_started()
-        await interaction.followup.send("✅ Aviso enviado al canal configurado.", ephemeral=True)
+        sent = await self._send_announcement(started=True)
+        await interaction.followup.send(
+            "✅ Aviso enviado al canal configurado." if sent else "❌ No pude enviar el aviso. Revisa el canal y los permisos del bot.",
+            ephemeral=True,
+        )
 
 
 async def setup(bot: commands.Bot):
