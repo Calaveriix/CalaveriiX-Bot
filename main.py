@@ -34,6 +34,7 @@ EXTENSIONS = [
     "cogs.moderation", "cogs.welcome_logs", "cogs.adminpanel",
     "cogs.leveling", "cogs.giveaways", "cogs.suggestions",
     "cogs.automod", "cogs.reactionroles", "cogs.music",
+    "cogs.imperio_calaveriix_live",
 ]
 
 class CalaveriiXBot(commands.Bot):
