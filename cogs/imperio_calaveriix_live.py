@@ -74,12 +74,16 @@ class ImperioCalaveriixLive(commands.Cog):
                     self._warned_obs = False
                     if self.last_live is None:
                         if is_live:
-                            await self._send_announcement(started=True)
-                    elif is_live and not self.last_live:
-                        await self._send_announcement(started=True)
-                    elif not is_live and self.last_live:
-                        await self._send_announcement(started=False)
-                    self.last_live = is_live
+                            # Keep the initial state unset until the first announcement succeeds.
+                            if await self._send_announcement(started=True):
+                                self.last_live = True
+                        else:
+                            self.last_live = False
+                    elif is_live != self.last_live:
+                        # Do not advance the state when Discord rejects the announcement;
+                        # the next polling cycle will retry it.
+                        if await self._send_announcement(started=is_live):
+                            self.last_live = is_live
                 except asyncio.CancelledError:
                     raise
                 except Exception as exc:
